@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <DUT Name="YOLO_OBJECT_DETECTION" Id="{62d2535f-7195-441a-9bd0-af96b710290c}">
+    <Declaration><![CDATA[TYPE YOLO_OBJECT_DETECTION :
+STRUCT
+	x_center_px 	: REAL;
+    y_center_px 	: REAL;
+    width_px    	: REAL;
+    height_px   	: REAL;
+    confidence  	: REAL;
+	nTopLeftX       : REAL;
+    nTopLeftY       : REAL;
+    nBottomRightX   : REAL;
+    nBottomRightY   : REAL;
+    valid       	: BOOL; // For NMS marking
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

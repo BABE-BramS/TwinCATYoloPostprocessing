@@ -1,0 +1,37 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <POU Name="CountAndKeepValidDetections" Id="{c0fd2cda-6656-462d-bc66-09a3b660b035}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION CountAndKeepValidDetections : INT
+VAR_INPUT
+	// Array containing 1 -- 100 predictions
+    detections : POINTER TO ARRAY[1..100] OF YOLO_OBJECT_Detection; // Pointer to detection array
+	// Number of valid non-valid predictions
+    count : INT; // Original number of detections
+END_VAR
+VAR
+	i : INT; // Current read index
+    j : INT; // Write index for valid detections
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[j := 1; // Start writing at position 1
+
+FOR i := 1 TO count DO
+    IF detections^[i].valid THEN
+        // Keep this detection
+        IF i <> j THEN
+            detections^[j] := detections^[i]; // Move valid detection forward
+        END_IF
+        j := j + 1;
+    END_IF
+END_FOR
+
+// Optional: clear the rest of the array (not strictly necessary, but safe)
+FOR i := j TO count DO
+    detections^[i].valid := FALSE; // Mark remaining entries as invalid
+END_FOR
+
+CountAndKeepValidDetections := j - 1; // Return new count of valid detections]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>

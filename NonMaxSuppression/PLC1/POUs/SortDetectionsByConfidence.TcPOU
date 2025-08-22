@@ -1,0 +1,43 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <POU Name="SortDetectionsByConfidence" Id="{784b5b67-3c97-408e-9a02-ff5e375c1ddb}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION SortDetectionsByConfidence : BOOL
+VAR_INPUT
+	 detections : POINTER TO ARRAY[1..100] OF YOLO_OBJECT_DETECTION; // Pointer to array
+    count : INT; // Number of valid detections
+END_VAR
+VAR
+	i : INT;
+    j : INT;
+    temp : YOLO_OBJECT_DETECTION;
+    swapped : BOOL;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[SortDetectionsByConfidence := FALSE;
+
+IF (count < 2) THEN
+    RETURN; // Nothing to sort
+END_IF
+
+FOR i := 1 TO count - 1 DO
+    swapped := FALSE;
+    FOR j := 1 TO count - i DO
+        // Sort by confidence descending
+        IF detections^[j].confidence < detections^[j + 1].confidence THEN
+            // Swap entire struct
+            temp := detections^[j];
+            detections^[j] := detections^[j + 1];
+            detections^[j + 1] := temp;
+            swapped := TRUE;
+        END_IF
+    END_FOR
+    IF NOT swapped THEN
+        EXIT;
+    END_IF
+END_FOR
+
+SortDetectionsByConfidence := TRUE;]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>

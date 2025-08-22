@@ -1,0 +1,65 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <POU Name="NonMaximumSuppression" Id="{57cda83b-a33b-4b75-9b12-7da54cf983ae}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION NonMaximumSuppression  : INT
+VAR_INPUT
+    detections : POINTER TO ARRAY[1..100] OF YOLO_OBJECT_Detection;
+    count : INT; // Number of sorted detections (already sorted by confidence)
+    iouThreshold : REAL; // Threshold to suppress, e.g., 0.5
+END_VAR
+VAR
+	i, j : INT;
+    iArea, jArea : REAL;
+    xx1, yy1, xx2, yy2 : REAL;
+    w, h : REAL;
+    interArea, unionArea, iou : REAL;
+    suppressedCount : INT := 0;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[FOR i := 1 TO count DO
+    IF NOT detections^[i].valid THEN
+        CONTINUE; // Already suppressed
+    END_IF
+
+    iArea := (detections^[i].nBottomRightX - detections^[i].nTopLeftX) *
+             (detections^[i].nBottomRightY - detections^[i].nTopLeftY);
+
+    FOR j := i + 1 TO count DO
+        IF NOT detections^[j].valid THEN
+            CONTINUE;
+        END_IF
+
+        // Calculate intersection rectangle
+        xx1 := MAX(detections^[i].nTopLeftX, detections^[j].nTopLeftX);
+        yy1 := MAX(detections^[i].nTopLeftY, detections^[j].nTopLeftY);
+        xx2 := MIN(detections^[i].nBottomRightX, detections^[j].nBottomRightX);
+        yy2 := MIN(detections^[i].nBottomRightY, detections^[j].nBottomRightY);
+
+        w := xx2 - xx1;
+        h := yy2 - yy1;
+
+        IF (w > 0.0) AND (h > 0.0) THEN
+            interArea := w * h;
+
+            jArea := (detections^[j].nBottomRightX - detections^[j].nTopLeftX) *
+                     (detections^[j].nBottomRightY - detections^[j].nTopLeftY);
+
+            unionArea := iArea + jArea - interArea;
+
+            IF unionArea > 0.0 THEN
+                iou := interArea / unionArea;
+
+                IF iou > iouThreshold THEN
+                    detections^[j].valid := FALSE; // Suppress overlapping detection
+                    suppressedCount := suppressedCount + 1;
+                END_IF
+            END_IF
+        END_IF
+    END_FOR
+END_FOR
+
+NonMaximumSuppression := suppressedCount;]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,51 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <POU Name="MAIN" Id="{29ce22f5-5f4e-4271-8c3c-13e41a304350}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM MAIN
+VAR
+	arrDetections : ARRAY[1..100] OF YOLO_OBJECT_DETECTION;
+	numberOfDetections : INT := 100;
+	numberOfValidDetections : INT ;
+	bInit : BOOL;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT bInit THEN
+	bInit := TRUE;
+	arrDetections[1].nTopLeftX := 245;
+	arrDetections[1].nTopLeftY := 305;
+	arrDetections[1].nBottomRightX := 575;
+	arrDetections[1].nBottomRightY := 490;	
+	arrDetections[1].confidence := 0.2;
+	arrDetections[1].valid := TRUE;
+	arrDetections[2].nTopLeftX := 235;
+	arrDetections[2].nTopLeftY := 300;
+	arrDetections[2].nBottomRightX := 485;
+	arrDetections[2].nBottomRightY := 515;	
+	arrDetections[2].confidence := 0.3;
+	arrDetections[2].valid := TRUE;	
+	arrDetections[3].nTopLeftX := 305;
+	arrDetections[3].nTopLeftY := 270;
+	arrDetections[3].nBottomRightX := 540;
+	arrDetections[3].nBottomRightY := 500;	
+	arrDetections[3].confidence := 0.4;
+	arrDetections[3].valid := TRUE;
+	arrDetections[4].nTopLeftX := 800;
+	arrDetections[4].nTopLeftY := 800;
+	arrDetections[4].nBottomRightX := 1000;
+	arrDetections[4].nBottomRightY := 1000;	
+	arrDetections[4].confidence := 0.8;
+	arrDetections[4].valid := TRUE;
+END_IF
+
+numberOfValidDetections := CountAndKeepValidDetections(detections:= ADR(arrDetections), count:= numberOfDetections);
+
+IF numberOfValidDetections > 1 THEN
+	IF SortDetectionsByConfidence(detections:= ADR(arrDetections), count:=numberOfValidDetections ) THEN
+		NonMaximumSuppression(detections:= ADR(arrDetections), count:= numberOfValidDetections, iouThreshold:= 0.5);
+	END_IF
+END_IF
+]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>
